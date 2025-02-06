@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "fajabot"
+version = "0.1.0"
+description = ""
+authors = ["Dominik Dlugajczyk <msocek@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+twitchapi = "^4.4.0"
+python-decouple = "^3.8"
+playsound = "1.2.2"
+pycairo = "^1.27.0"
+pygobject = "^3.50.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.31.0"
+ipdb = "^0.13.13"
+icecream = "^2.1.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+line_length = 99
+known_first_party = [ "fajabot" ]
+multi_line_output = 3
+sections = [ "FUTURE", "STDLIB", "OTHER", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+force_single_line = true
+default_section = "OTHER"
+
+[tool.black]
+line_length = 99
+target-version = [ "py38" ]
+ignore = [ "W503", "W504" ]
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report term:skip-covered --cov-report html --no-cov-on-fail -vv --ff -x fajabot"
+asyncio_mode = "auto"
+markers = [
+    "integration: all tests which are needing of external services, like database or appnexus api", ]
+norecursedirs = [
+    ".cache",
+    ".git",
+    ".idea",
+    "bin",
+    "*migrations*",
+    "spa",
+    "static",
+    "var",
+    "docker",
+    "common" ]
+filterwarnings = [
+    "error::RuntimeWarning",
+    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning",
+    "ignore:The hookimpl CovPlugin.* uses old-style configuration options.*:DeprecationWarning",
+]
+[tool.coverage.run]
+branch = true
+omit = [
+    "quackquack/*",
+    "*/tests/*",
+    "*/test_*/*",
+    "*/versions/*",
+    "*/testing.py",
+    "*/settings/*",
+    "*/app/*",
+    "*/admin.py",
+    "*/.cache/*",
+    "/home/user/*",
+    "*/.cache/pypoetry/*",
+    "conftest.py"]
