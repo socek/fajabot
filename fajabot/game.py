@@ -93,7 +93,7 @@ def clash_stage(profile: Profile, enemy: Enemy) -> ClashStage:
 def defence_stage(profile, enemy, clash: ClashStage):
     if clash.result() == "profile_win":
         if clash.profile_attack > enemy.defence:
-            return DefenceStage(result="enemy_is_hit", profile_exp_change=5)
+            return DefenceStage(result="enemy_is_hit", profile_exp_change=enemy.attack + enemy.defence)
         else:
             return DefenceStage(result="enemy_is_not_hit")
     elif clash.result() == "enemy_win":

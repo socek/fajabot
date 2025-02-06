@@ -20,4 +20,4 @@ def update_profile(
 
 
 def get_profile(user_id: ProfileIdentity) -> Profile:
-    return Profile(ProfileIdentity("socek", "#chan"), 4, 0, 1, 0)
+    return Profile(ProfileIdentity(user_id.user, user_id.channel), 4, 0, 1, 0)

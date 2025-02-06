@@ -1,10 +1,11 @@
+import asyncio
+
 from fajabot.game import fight
-
-# import asyncio
-
-# from fajabot.ttv import ttvloop
+from fajabot.profile import ProfileIdentity
+from fajabot.ttv import ttvloop
 
 # # lets run our setup
-# asyncio.run(ttvloop())
+asyncio.run(ttvloop())
 
-print(fight(None))
+# profile_id = ProfileIdentity("Socek", "#chan")
+# print(fight(profile_id))

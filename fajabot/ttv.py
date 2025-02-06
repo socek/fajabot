@@ -22,7 +22,7 @@ async def ttvloop():
     # set up twitch api instance and add user authentication with some scopes
     twitch = await Twitch(settings.APP_ID, settings.APP_SECRET)
     auth = UserAuthenticator(twitch, settings.USER_SCOPE)
-    token, refresh_token = await auth.authenticate()
+    token, refresh_token = await auth.authenticate(browser_name="Firefox")
     await twitch.set_user_authentication(token, settings.USER_SCOPE, refresh_token)
 
     # create chat instance
