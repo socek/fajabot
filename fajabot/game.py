@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from dataclasses import field
+from enum import Enum
 from random import randint
 from typing import Optional
 
@@ -9,6 +10,17 @@ from fajabot.profile import ProfileIdentity
 
 RANGE = 3
 ROLL = 6
+
+
+class FightResult(Enum):
+    profile_win = "profile_win"
+    enemy_win = "enemy_win"
+    draw = "draw"
+
+    profile_is_hit = "profile_is_hit"
+    profile_is_not_hit = "profile_is_not_hit"
+    enemy_is_hit = "enemy_is_hit"
+    enemy_is_not_hit = "enemy_is_not_hit"
 
 
 @dataclass
@@ -33,17 +45,17 @@ class ClashStage(FightStage):
 
     def result(self):
         if self.profile_attack > self.enemy_attack:
-            return "profile_win"
+            return FightResult.profile_win
         elif self.profile_attack < self.enemy_attack:
-            return "enemy_win"
+            return FightResult.enemy_win
         else:
-            return "draw"
+            return FightResult.draw
 
 
 @dataclass
 class DefenceStage(FightStage):
     name: str = field(init=False)
-    result: str
+    result: FightResult
     profile_hp_change: int = 0
     profile_exp_change: int = 0
 
@@ -91,15 +103,17 @@ def clash_stage(profile: Profile, enemy: Enemy) -> ClashStage:
 
 
 def defence_stage(profile, enemy, clash: ClashStage):
-    if clash.result() == "profile_win":
+    if clash.result() == FightResult.profile_win:
         if clash.profile_attack > enemy.defence:
-            return DefenceStage(result="enemy_is_hit", profile_exp_change=enemy.attack + enemy.defence)
+            return DefenceStage(
+                result=FightResult.enemy_is_hit, profile_exp_change=enemy.attack + enemy.defence
+            )
         else:
-            return DefenceStage(result="enemy_is_not_hit")
-    elif clash.result() == "enemy_win":
+            return DefenceStage(result=FightResult.enemy_is_not_hit)
+    elif clash.result() == FightResult.enemy_win:
         if clash.enemy_attack > profile.defence:
-            return DefenceStage(result="profile_is_hit", profile_hp_change=-1)
+            return DefenceStage(result=FightResult.profile_is_hit, profile_hp_change=-1)
         else:
-            return DefenceStage(result="profile_is_not_hit")
+            return DefenceStage(result=FightResult.profile_is_not_hit)
     else:
-        return DefenceStage(result="nothing")
+        return DefenceStage(result=FightResult.draw)
