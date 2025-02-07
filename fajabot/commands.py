@@ -16,18 +16,16 @@ TEXTS = {
     "enemy_is_hit": "Trafiłeś i dostajes {exp}exp.",
     "enemy_is_not_hit": "Trafiłeś, ale nie zadałeś obrażeń.",
     "draw": "Potyczka nie została rozstrzygnięta (remis).",
+    "waitforsound": "Poczekaj na dźwięk alertu.",
     "notimplemented": "Ta komenda jeszcze nie działa.",
+    "commands": "!czatgra !postac !quest !walcz !topzywych !topall !strimujwiecej !komendy",
 }
-
-
-# this will be called whenever the !reply command is issued
-async def test_command(cmd: ChatCommand):
-    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Ships/Hshpwht3.wav")
 
 
 async def chatgra(cmd: ChatCommand):
     ic("chatgra")
     await cmd.send(TEXTS["intro"])
+    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Ocapture.wav")
 
 
 async def postac(cmd: ChatCommand):
@@ -40,8 +38,8 @@ async def postac(cmd: ChatCommand):
         hp=profile.hp,
         experience=profile.experience,
     )
-    ic("a", text)
-    ic(await cmd.reply(text))
+    await cmd.reply(text)
+    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Pig.wav")
 
 
 async def quest(cmd: ChatCommand):
@@ -76,6 +74,7 @@ async def walcz(cmd: ChatCommand):
         texts.append(TEXTS["draw"])
 
     await cmd.send(" ".join(texts))
+    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword2.wav")
 
 
 async def topzywych(cmd: ChatCommand):
@@ -86,6 +85,15 @@ async def topall(cmd: ChatCommand):
     await cmd.send(TEXTS["notimplemented"])
 
 
+async def strimmore(cmd: ChatCommand):
+    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Wizard/Wzpissd1.wav")
+    await cmd.reply(TEXTS["waitforsound"])
+
+
+async def commands(cmd: ChatCommand):
+    await cmd.reply(TEXTS["commands"])
+
+
 def register(chat: Chat):
     chat.register_command("czatgra", chatgra)
     chat.register_command("postac", postac)
@@ -93,3 +101,5 @@ def register(chat: Chat):
     chat.register_command("walcz", walcz)
     chat.register_command("topzywych", topzywych)
     chat.register_command("topall", topall)
+    chat.register_command("strimujwiecej", strimmore)
+    chat.register_command("komendy", commands)
