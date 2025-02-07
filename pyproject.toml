@@ -12,6 +12,7 @@ python-decouple = "^3.8"
 playsound = "1.2.2"
 pycairo = "^1.27.0"
 pygobject = "^3.50.0"
+supabase = "^2.13.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -3,6 +3,7 @@ from twitchAPI.chat import Chat
 from twitchAPI.chat import ChatCommand
 
 from fajabot.driver import get_profile
+from fajabot.driver import update_profile
 from fajabot.game import FightResult
 from fajabot.game import fight
 from fajabot.profile import ProfileIdentity
@@ -16,6 +17,7 @@ TEXTS = {
     "enemy_is_hit": "Trafiłeś i dostajes {exp}exp.",
     "enemy_is_not_hit": "Trafiłeś, ale nie zadałeś obrażeń.",
     "draw": "Potyczka nie została rozstrzygnięta (remis).",
+    "death": "Twoja postać zginęła. :(",
     "waitforsound": "Poczekaj na dźwięk alertu.",
     "notimplemented": "Ta komenda jeszcze nie działa.",
     "commands": "!czatgra !postac !quest !walcz !topzywych !topall !strimujwiecej !komendy",
@@ -61,7 +63,6 @@ async def walcz(cmd: ChatCommand):
         )
     ]
     defence_result = fight_log.stages[1]
-    ic(defence_result, defence_result.result)
     if defence_result.result == FightResult.profile_is_hit:
         texts.append(TEXTS["profile_is_hit"])
     elif defence_result.result == FightResult.profile_is_not_hit:
@@ -73,8 +74,36 @@ async def walcz(cmd: ChatCommand):
     else:
         texts.append(TEXTS["draw"])
 
+    active = update_profile_after_fight(
+        profile_id,
+        defence_result.profile_hp_change,
+        defence_result.profile_exp_change,
+    )
+    if active:
+        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword2.wav")
+    else:
+        texts.append(TEXTS["death"])
+        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Human/Hdead.wav")
+
     await cmd.send(" ".join(texts))
-    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword2.wav")
+
+
+
+def update_profile_after_fight(profile_id: ProfileIdentity, hp_change: int, exp_change: int):
+    if hp_change == 0 and exp_change == 0:
+        return
+
+    profile = get_profile(profile_id)
+    row_changes = {}
+    if hp_change != 0:
+        row_changes["hp"] = profile.hp + hp_change
+        if row_changes["hp"] <= 0:
+            row_changes["active"] = False
+    if exp_change != 0:
+        row_changes["experience"] = profile.experience + exp_change
+    update_profile(profile_id, **row_changes)
+    ic(f"{profile_id.user}#{profile_id.channel} updated")
+    return row_changes.get("active", True)
 
 
 async def topzywych(cmd: ChatCommand):

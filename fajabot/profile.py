@@ -10,8 +10,8 @@ class ProfileIdentity:
 @dataclass
 class Profile:
     user_id: ProfileIdentity
-    hp: int
-    defence: int
-    attack: int
-    experience: int
+    hp: int = 4
+    defence: int = 0
+    attack: int = 1
+    experience: int = 0
     active: bool = True
