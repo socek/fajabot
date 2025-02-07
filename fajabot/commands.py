@@ -26,12 +26,12 @@ async def test_command(cmd: ChatCommand):
 
 
 async def chatgra(cmd: ChatCommand):
-    print("chatgra")
+    ic("chatgra")
     await cmd.send(TEXTS["intro"])
 
 
 async def postac(cmd: ChatCommand):
-    print("postac", cmd.text)
+    ic("postac", cmd.text)
     profile = get_profile(ProfileIdentity(cmd.user.id, cmd.room.name))
     text = TEXTS["postać"].format(
         name=cmd.user.name,
@@ -40,8 +40,8 @@ async def postac(cmd: ChatCommand):
         hp=profile.hp,
         experience=profile.experience,
     )
-    print("a", text)
-    print(await cmd.reply(text))
+    ic("a", text)
+    ic(await cmd.reply(text))
 
 
 async def quest(cmd: ChatCommand):
@@ -49,7 +49,7 @@ async def quest(cmd: ChatCommand):
 
 
 async def walcz(cmd: ChatCommand):
-    print("Walcz")
+    ic("Walcz")
     profile_id = ProfileIdentity(cmd.user.id, cmd.room.name)
     fight_log = fight(profile_id)
 
@@ -63,7 +63,7 @@ async def walcz(cmd: ChatCommand):
         )
     ]
     defence_result = fight_log.stages[1]
-    print("A", defence_result, defence_result.result)
+    ic(defence_result, defence_result.result)
     if defence_result.result == FightResult.profile_is_hit:
         texts.append(TEXTS["profile_is_hit"])
     elif defence_result.result == FightResult.profile_is_not_hit:
