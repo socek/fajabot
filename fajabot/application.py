@@ -26,6 +26,7 @@ async def on_ready(ready_event: EventData):
     # or even better pass a list of channels as the argument
     await ready_event.chat.join_room(settings.TARGET_CHANNEL)
     # you can do other bot initialization things in here
+    await ready_event.chat.send_message(settings.TARGET_CHANNEL, "Bot Aktywny, można grać.")
 
 
 class Application:
@@ -48,6 +49,7 @@ class Application:
 
         # listen to when the bot is done starting up and ready to join channels
         self.chat.register_event(ChatEvent.READY, on_ready)
+        # self.chat.register_event(ChatEvent.JOINED, on_joined)
 
         # we are done with our setup, lets start this bot up!
         print("Starting chat...")
