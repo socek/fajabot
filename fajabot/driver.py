@@ -76,7 +76,7 @@ def update_profile(
         return
 
 
-def get_profile(user_id: ProfileIdentity) -> Profile:
+def get_profile(user_id: ProfileIdentity, create_default: bool = True) -> Profile:
     supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
     table = supabase.table("profiles")
 
@@ -90,11 +90,13 @@ def get_profile(user_id: ProfileIdentity) -> Profile:
     profile = Profile(
         ProfileIdentity(user_id.user, user_id.channel),
     )
-    if find_response.data != []:
+    if create_default and find_response.data != []:
         row = find_response.data[0]
         profile.hp = row["hp"]
         profile.defence = row["defence"]
         profile.attack = row["attack"]
         profile.experience = row["experience"]
+    else:
+        return None
 
     return profile

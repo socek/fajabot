@@ -13,7 +13,7 @@ from fajabot.quests import draw_quest
 
 TEXTS = {
     "intro": "Stwórz swoją !postac, rób !quest oraz !walcz z bossami. Rób questy, aby mieć lepszą broń lub pancerz. Walcz z bossami, aby zdobywać punkty. Masz tylko 4 życia więc uważaj. !topzywych oraz !topall aby zobaczyć topkę.",
-    "postać": "@{name} Masz {attack}/{defence} (atak/obrona) i {hp}hp. Twój exp: {experience}",
+    "profile": "@{name} ma {attack}/{defence} (atak/obrona) i {hp}hp. Doświadczenie: {experience}",
     "fight": "@{name} {profile_attack_base}+{profile_roll} walczy z goblinem {enemy_attack_base}+{enemy_roll}.",
     "profile_is_hit": "Goblin trafił i zadał 1hp.",
     "profile_is_not_hit": "Goblin trafił, ale nie zadał obrażeń.",
@@ -24,6 +24,7 @@ TEXTS = {
     "waitforsound": "Poczekaj na dźwięk alertu.",
     "notimplemented": "Ta komenda jeszcze nie działa.",
     "commands": "!czatgra !postac !quest !walcz !topzywych !topall !strimujwiecej !komendy",
+    "profile_not_found": "Ten użytkownik nie ma przypisanej postaci",
 }
 
 
@@ -35,8 +36,20 @@ async def chatgra(cmd: ChatCommand):
 
 async def postac(cmd: ChatCommand):
     ic("postac", cmd.text)
-    profile = get_profile(ProfileIdentity(cmd.user.name, cmd.room.name))
-    text = TEXTS["postać"].format(
+    texts = cmd.text.split(" ")
+    while ' ' in texts:
+        texts.remove(' ')
+    if len(texts) == 0:
+        profile = get_profile(ProfileIdentity(cmd.user.name, cmd.room.name))
+    else:
+        name = texts[1]
+        if name.startswith("@"):
+            name = name[1:]
+        profile = get_profile(ProfileIdentity(name, cmd.room.name))
+        if not profile:
+            await cmd.reply(TEXTS["profile_not_found"])
+            return
+    text = TEXTS["profile"].format(
         name=cmd.user.name,
         attack=profile.attack,
         defence=profile.defence,
@@ -68,7 +81,6 @@ async def walcz(cmd: ChatCommand):
         enemy_attack_base=fight_log.enemy.attack,
         enemy_roll=fight_log.stages[0].enemy_attack - fight_log.enemy.attack,
     )
-    ic(data)
     texts = [TEXTS["fight"].format(**data)]
     defence_result = fight_log.stages[1]
     if defence_result.result == FightResult.profile_is_hit:
@@ -99,28 +111,20 @@ async def walcz(cmd: ChatCommand):
 
 
 def update_profile_after_fight(profile_id: ProfileIdentity, defence_result: DefenceStage):
-    ic(profile_id, defence_result)
     if defence_result.profile_hp_change == 0 and defence_result.profile_exp_change == 0:
-        ic()
         return True
     if defence_result.result == FightResult.draw:
-        ic()
         return True
 
     profile = get_profile(profile_id)
-    ic()
     row_changes = {"active": True}
-    ic()
     if defence_result.profile_hp_change != 0:
         row_changes["hp"] = profile.hp + defence_result.profile_hp_change
         if row_changes["hp"] <= 0:
-            ic()
             row_changes["active"] = False
     if defence_result.profile_exp_change != 0:
         row_changes["experience"] = profile.experience + defence_result.profile_exp_change
-    ic(row_changes)
     update_profile(profile_id, **row_changes)
-    ic(f"{profile_id.user}#{profile_id.channel} updated")
     return row_changes["active"]
 
 
