@@ -8,11 +8,13 @@ from fajabot.game import DefenceStage
 from fajabot.game import FightResult
 from fajabot.game import fight
 from fajabot.profile import ProfileIdentity
+from fajabot.quests import apply_quest
+from fajabot.quests import draw_quest
 
 TEXTS = {
     "intro": "Stwórz swoją !postac, rób !quest oraz !walcz z bossami. Rób questy, aby mieć lepszą broń lub pancerz. Walcz z bossami, aby zdobywać punkty. Masz tylko 4 życia więc uważaj. !topzywych oraz !topall aby zobaczyć topkę.",
     "postać": "@{name} Masz {attack}/{defence} (atak/obrona) i {hp}hp. Twój exp: {experience}",
-    "fight": "@{name} {profile_attack_base}+{profile_attack_base-profile_attack} walczy z goblinem {enemy_attack_base}+{enemy_attack_base-enemy_attack}.",
+    "fight": "@{name} {profile_attack_base}+{profile_roll} walczy z goblinem {enemy_attack_base}+{enemy_roll}.",
     "profile_is_hit": "Goblin trafił i zadał 1hp.",
     "profile_is_not_hit": "Goblin trafił, ale nie zadał obrażeń.",
     "enemy_is_hit": "Trafiłeś i dostajes {exp}exp.",
@@ -46,7 +48,12 @@ async def postac(cmd: ChatCommand):
 
 
 async def quest(cmd: ChatCommand):
-    await cmd.send(TEXTS["notimplemented"])
+    ic("quest")
+    profile_id = ProfileIdentity(cmd.user.name, cmd.room.name)
+    profile = get_profile(profile_id)
+    quest = draw_quest()
+    apply_quest(profile, quest)
+    await cmd.reply(quest.text)
 
 
 async def walcz(cmd: ChatCommand):
@@ -54,15 +61,15 @@ async def walcz(cmd: ChatCommand):
     profile_id = ProfileIdentity(cmd.user.name, cmd.room.name)
     fight_log = fight(profile_id)
 
-    texts = [
-        TEXTS["fight"].format(
-            name=cmd.user.name,
-            profile_attack_base=fight_log.profile.attack,
-            profile_attack=fight_log.stages[0].profile_attack,
-            enemy_attack_base=fight_log.enemy.attack,
-            enemy_attack=fight_log.stages[0].enemy_attack,
-        )
-    ]
+    data = dict(
+        name=cmd.user.name,
+        profile_attack_base=fight_log.profile.attack,
+        profile_roll=fight_log.stages[0].profile_attack - fight_log.profile.attack,
+        enemy_attack_base=fight_log.enemy.attack,
+        enemy_roll=fight_log.stages[0].enemy_attack - fight_log.enemy.attack,
+    )
+    ic(data)
+    texts = [TEXTS["fight"].format(**data)]
     defence_result = fight_log.stages[1]
     if defence_result.result == FightResult.profile_is_hit:
         texts.append(TEXTS["profile_is_hit"])
@@ -89,7 +96,6 @@ async def walcz(cmd: ChatCommand):
         playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Human/Hdead.wav")
 
     await cmd.send(" ".join(texts))
-
 
 
 def update_profile_after_fight(profile_id: ProfileIdentity, defence_result: DefenceStage):
