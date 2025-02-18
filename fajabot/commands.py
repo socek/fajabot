@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 from playsound import playsound
 from twitchAPI.chat import Chat
 from twitchAPI.chat import ChatCommand
 
+from fajabot.cooldown import cooldown
 from fajabot.driver import get_profile
 from fajabot.driver import update_profile
 from fajabot.game import DefenceStage
@@ -27,19 +30,16 @@ TEXTS = {
     "profile_not_found": "Ten użytkownik nie ma przypisanej postaci",
 }
 
-
 async def chatgra(cmd: ChatCommand):
-    ic("chatgra")
     await cmd.send(TEXTS["intro"])
     playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Ocapture.wav")
 
 
 async def postac(cmd: ChatCommand):
-    ic("postac", cmd.text)
     texts = cmd.text.split(" ")
     while ' ' in texts:
         texts.remove(' ')
-    if len(texts) == 0:
+    if len(texts) == 1:
         profile = get_profile(ProfileIdentity(cmd.user.name, cmd.room.name))
     else:
         name = texts[1]
@@ -59,9 +59,8 @@ async def postac(cmd: ChatCommand):
     await cmd.reply(text)
     playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Pig.wav")
 
-
+@cooldown("quest", timedelta(hours=1))
 async def quest(cmd: ChatCommand):
-    ic("quest")
     profile_id = ProfileIdentity(cmd.user.name, cmd.room.name)
     profile = get_profile(profile_id)
     quest = draw_quest()
@@ -69,8 +68,8 @@ async def quest(cmd: ChatCommand):
     await cmd.reply(quest.text)
 
 
+@cooldown("walcz", timedelta(hours=1))
 async def walcz(cmd: ChatCommand):
-    ic("Walcz")
     profile_id = ProfileIdentity(cmd.user.name, cmd.room.name)
     fight_log = fight(profile_id)
 
@@ -136,6 +135,7 @@ async def topall(cmd: ChatCommand):
     await cmd.send(TEXTS["notimplemented"])
 
 
+@cooldown("strimmore", timedelta(hours=1))
 async def strimmore(cmd: ChatCommand):
     playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Wizard/Wzpissd1.wav")
     await cmd.reply(TEXTS["waitforsound"])

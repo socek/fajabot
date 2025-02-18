@@ -1,6 +1,9 @@
 from dataclasses import dataclass
+from datetime import timedelta
 from random import choice
+from typing import Optional
 
+from fajabot.driver import set_cooldown
 from fajabot.driver import update_profile
 from fajabot.profile import Profile
 
@@ -12,6 +15,8 @@ class Quest:
     profile_hp_change: int = 0
     profile_defence_change: int = 0
     profile_attack_change: int = 0
+    quest_cooldown: Optional[timedelta] = None
+    fight_cooldown: Optional[timedelta] = None
 
 
 quests = [
@@ -26,14 +31,16 @@ quests = [
     ),
     Quest(
         "Wyszedłeś na wyprawę. I znalazłeś butelke płynu. Wypijasz go. I się upijasz. Musisz poczekać, aż wytrzeźwiejesz. Polecam nie pić nieznanych i znalezionych płynów.",
-        3,
+        1,
+        quest_cooldown=timedelta(hours=3),
+        fight_cooldown=timedelta(hours=3),
     ),
     Quest(
         "Wkraczasz do lochu. Loch jest posępny i ciemny. Zanjdujesz nieznay płyn w butelce równie nieznanej. Wypijasz, bo jesteś aloholokiem. Okazało się, że to mocz. Smacznego. Straciłeś tylko trochę godności.",
         2,
     ),
     Quest(
-        "Wkraczasz do lochu. Loch jest jasny, gdyż pomimo braku źródła światła, twórca gry dodał dużo światła. A na stole leży nowa, lepszy zbroja. +1 do obrony.",
+        "Wkraczasz do lochu. Loch jest jasny, gdyż pomimo braku źródła światła, twórca gry dodał dużo światła. A na stole leży nowa, lepszy zbroja. +1 do obrony. Jest cała różowa.",
         1,
         profile_defence_change=1,
     ),
@@ -50,8 +57,6 @@ def draw_quest() -> Quest:
     for quest in quests:
         for _ in range(quest.probability):
             quest_deck.append(quest)
-    for quest in quest_deck:
-        ic(quest.text)
     return choice(quest_deck)
 
 
@@ -65,3 +70,8 @@ def apply_quest(profile: Profile, quest: Quest):
         row_changes["attack"] = profile.attack + quest.profile_attack_change
 
     update_profile(profile.user_id, **row_changes)
+
+    if quest.quest_cooldown:
+        set_cooldown(profile.user_id, "quest", quest.quest_cooldown)
+    if quest.fight_cooldown:
+        set_cooldown(profile.user_id, "quest", quest.fight_cooldown)
