@@ -128,3 +128,9 @@ def get_cooldown_time(user_id: ProfileIdentity, command: str) -> Optional[list]:
     if find_response.data != []:
         div = datetime.fromisoformat(find_response.data[0]["cooldown"]) - datetime.now()
         return [div.days, div.seconds // 3600, div.seconds // 60 % 60, div.seconds % 3600 % 60]
+
+def get_obs_events(fromtime: datetime) -> list:
+    supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
+    table = supabase.table("obsalerts")
+    result = table.select("payload").gt("created_at", fromtime).execute()
+    return [row["payload"] for row in result.data]

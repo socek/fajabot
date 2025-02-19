@@ -1,0 +1,14 @@
+body {
+  height: 300px;
+  width: 300px;
+  line-height: 300px;
+  text-align: center;
+}
+
+.cssid {
+  line-height: 1.5;
+  display: inline-block;
+  vertical-align: middle;
+
+  color: red;
+}
