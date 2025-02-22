@@ -1,3 +1,4 @@
 .env
 *.pyc
 pyrightconfig.json
+node_modules

@@ -16,7 +16,7 @@
 
   const fetchData = async () => {
     const res = await axios.get(
-      'http://localhost:8000/obsalerts',
+      '/api/obsalerts',
       {
           params: {"time": lastTime}
       }
@@ -28,7 +28,7 @@
   }
 
   onMounted(async () => {
-    const res = await axios('http://localhost:8000/obsalerts')
+    const res = await axios('/api/obsalerts')
     lastTime = res.data.time
     cycleReference = setInterval(fetchData, 1000)
   })

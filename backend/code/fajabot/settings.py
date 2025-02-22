@@ -8,3 +8,15 @@ USER_SCOPE = [AuthScope.CHAT_READ, AuthScope.CHAT_EDIT]
 
 SUPABASE_URL: str = config("SUPABASE_URL")
 SUPABASE_KEY: str = config("SUPABASE_KEY")
+
+
+def psql():
+    name = config("POSTGRES_DB")
+    user = config("POSTGRES_USER")
+    password = config("POSTGRES_PASSWORD")
+    host = config("POSTGRES_HOST")
+    return f"postgresql://{user}:{password}@{host}:5432/{name}"
+
+
+DB_URL: str = psql()
+DB_OPTIONS: dict = {"pool_recycle": 3600}

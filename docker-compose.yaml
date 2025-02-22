@@ -1,0 +1,49 @@
+services:
+  webapi:
+    build: backend
+    image: fajabot-backend-image
+    volumes:
+      - ./backend/code:/code
+    env_file: .env
+    labels:
+      - "traefik.http.routers.webapi.rule=PathPrefix(`/api/`)"
+      - "traefik.http.routers.webapi.middlewares=webapi-stripprefix"
+      - "traefik.http.middlewares.webapi-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.services.webapi.loadbalancer.server.port=8000"
+      - "traefik.enable=true"
+
+  frontend:
+    build:
+        context: ./frontend/
+        target: builder
+    image: fajabot-frontend-image
+    env_file: .env
+    labels:
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+        - "traefik.enable=true"
+    volumes:
+        - ./frontend/code:/code
+    ports:
+        - 5173:5173
+    command: yarn dev
+
+  postgres:
+    image: postgres:17.3
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file: .env
+
+  traefik:
+    image: "traefik:v3.3.3"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+volumes:
+  pgdata: {}
