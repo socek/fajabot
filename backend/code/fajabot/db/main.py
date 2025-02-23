@@ -24,4 +24,4 @@ def _sessionmaker():
 
 
 def db():
-    return _sessionmaker()
+    return _sessionmaker()()
