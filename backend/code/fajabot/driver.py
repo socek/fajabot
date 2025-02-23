@@ -3,7 +3,9 @@ from datetime import timedelta
 from typing import Optional
 from uuid import uuid4
 
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.sql.expression import and_
 
 from fajabot import settings
 from fajabot.db.main import db
@@ -66,11 +68,38 @@ def update_profile(
     if active is not None:
         row["active"] = active
 
-    session.query(ProfileTable.id).filter(
+    result = session.query(ProfileTable.id).filter(
         ProfileTable.user == user_id.user,
         ProfileTable.channel == user_id.channel,
         ProfileTable.active == True,
-    ).update(row)
+    ).first()
+
+    if result:
+        session.execute(update(ProfileTable).where(ProfileTable.id == result[0]).values(row))
+    else:
+        insert_row = dict(**row)
+        insert_row["id"] = uuid4()
+        insert_row["user"] = user_id.user
+        insert_row["channel"] = user_id.channel
+        insert_row["created_at"] = now
+        insert_row["active"] = True
+        session.execute(insert(ProfileTable).values([insert_row]))
+    session.commit()
+
+    # table = ProfileTable.__table__
+    # stmt = insert(table).values(
+    #     id=uuid4(), user=user_id.user, channel=user_id.channel, created_at=now, **row
+    # )
+    # stmt = stmt.on_conflict_do_update(
+    #     index_elements=[table.c.user, table.c.channel],
+    #     index_where=and_(
+    #         table.c.user == user_id.user,
+    #         table.c.channel == user_id.channel,
+    #     ),
+    #     set_=row,
+    # )
+    # session.execute(stmt)
+    # session.commit()
 
     # TODO: upsert
 
