@@ -12,6 +12,19 @@ services:
       - "traefik.http.services.webapi.loadbalancer.server.port=8000"
       - "traefik.enable=true"
 
+  ttvbot:
+    image: fajabot-backend-image
+    command: ttvbot
+    volumes:
+      - ./backend/code:/code
+    env_file: .env
+    labels:
+      - "traefik.http.routers.ttvbot.rule=PathPrefix(`/ttvbot/`)"
+      - "traefik.http.routers.ttvbot.middlewares=ttvbot-stripprefix"
+      - "traefik.http.middlewares.ttvbot-stripprefix.stripprefix.prefixes=/ttvbot"
+      - "traefik.http.services.ttvbot.loadbalancer.server.port=17563"
+      - "traefik.enable=true"
+
   frontend:
     build:
         context: ./frontend/

@@ -35,3 +35,10 @@ class ObsalertsTable(SqlTable, IdMixin):
     __tablename__ = "obsalerts"
 
     payload = Column(JSON, nullable=True)
+
+
+class KVStoreTable(SqlTable):
+    __tablename__ = "kvstore"
+
+    key = Column(String, primary_key=True, unique=True, nullable=False)
+    payload = Column(JSON, nullable=True)

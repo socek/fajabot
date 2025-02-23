@@ -8,10 +8,13 @@ from sqlalchemy.dialects.postgresql import insert
 from fajabot import settings
 from fajabot.db.main import db
 from fajabot.db.profile import CooldownTable
+from fajabot.db.profile import KVStoreTable
 from fajabot.db.profile import ObsalertsTable
 from fajabot.db.profile import ProfileTable
 from fajabot.profile import Profile
 from fajabot.profile import ProfileIdentity
+
+AUTH_TOKEN_KEY = "auth_token"
 
 
 def create_profile(
@@ -157,16 +160,14 @@ def get_cooldown_time(user_id: ProfileIdentity, command: str) -> Optional[list]:
         div = result[0] - datetime.now()
         return [div.days, div.seconds // 3600, div.seconds // 60 % 60, div.seconds % 3600 % 60]
 
+
 def add_obs_event(payload: dict):
     session = db()
-    row = {
-        "id": uuid4(),
-        "created_at": datetime.now(),
-        "payload": payload
-    }
+    row = {"id": uuid4(), "created_at": datetime.now(), "payload": payload}
     rowcount = session.execute(insert(ObsalertsTable).values([row])).rowcount
     session.commit()
     return rowcount
+
 
 def get_obs_events(fromtime: datetime) -> list:
     session = db()
@@ -177,3 +178,48 @@ def get_obs_events(fromtime: datetime) -> list:
         ObsalertsTable.created_at > fromtime,
     )
     return [row._asdict() for row in result]
+
+
+def set_auth_tokens(token: str, refresh_token: str):
+    session = db()
+
+    table = KVStoreTable.__table__
+    payload = {
+        "token": token,
+        "refresh_token": refresh_token,
+    }
+    stmt = insert(table).values(
+        key=AUTH_TOKEN_KEY,
+        payload=payload,
+        updated_at=datetime.now(),
+    )
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[table.c.key],
+        index_where=table.c.key == AUTH_TOKEN_KEY,
+        set_=dict(
+            payload=payload,
+            updated_at=datetime.now(),
+        ),
+    )
+    session.execute(stmt)
+    session.commit()
+
+
+def get_auth_tokens():
+    session = db()
+
+    result = (
+        session.query(
+            KVStoreTable.payload,
+        )
+        .filter(
+            KVStoreTable.key == AUTH_TOKEN_KEY,
+        )
+        .first()
+    )
+
+    if result:
+        row = result[0]
+        return row["token"], row["refresh_token"]
+    else:
+        return "", ""

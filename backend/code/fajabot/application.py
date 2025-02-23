@@ -1,6 +1,3 @@
-from asyncio import TaskGroup
-from asyncio import ensure_future
-from asyncio import new_event_loop
 from asyncio import run
 from asyncio import sleep
 from signal import SIGINT
@@ -13,10 +10,13 @@ from twitchAPI.chat import EventData
 from twitchAPI.oauth import UserAuthenticator
 from twitchAPI.twitch import Twitch
 from twitchAPI.type import ChatEvent
+from twitchAPI.type import InvalidRefreshTokenException
 
 from fajabot import settings
 from fajabot.commands import register
 from fajabot.consts import State
+from fajabot.driver import get_auth_tokens
+from fajabot.driver import set_auth_tokens
 
 
 # this will be called when the event READY is triggered, which will be on bot start
@@ -27,6 +27,17 @@ async def on_ready(ready_event: EventData):
     await ready_event.chat.join_room(settings.TARGET_CHANNEL)
     # you can do other bot initialization things in here
     await ready_event.chat.send_message(settings.TARGET_CHANNEL, "Bot Aktywny, można grać.")
+
+async def authenticate(twitch):
+    auth = UserAuthenticator(twitch, settings.USER_SCOPE, url='http://localhost/ttvbot/')
+    try:
+        token, refresh_token = get_auth_tokens()
+        await twitch.set_user_authentication(token, settings.USER_SCOPE, refresh_token)
+    except InvalidRefreshTokenException:
+        print(f"Authorizing: {auth.return_auth_url()}")
+        token, refresh_token = await auth.authenticate(use_browser=False)
+        set_auth_tokens(token, refresh_token)
+        await twitch.set_user_authentication(token, settings.USER_SCOPE, refresh_token)
 
 
 class Application:
@@ -39,10 +50,8 @@ class Application:
         print("Initializing...")
         self.state = State.RUNNING
         self.twitch = await Twitch(settings.APP_ID, settings.APP_SECRET)
-        auth = UserAuthenticator(self.twitch, settings.USER_SCOPE)
-        print("Authorizing...")
-        token, refresh_token = await auth.authenticate(browser_name="Firefox")
-        await self.twitch.set_user_authentication(token, settings.USER_SCOPE, refresh_token)
+        await authenticate(self.twitch)
+        print("Authorized...")
         self.chat = await Chat(self.twitch)
         # register the handlers for the events you want
         register(self.chat)
@@ -88,5 +97,4 @@ def init(app):
 def main():
     app = Application()
     init(app)
-    eloop = new_event_loop()
     run(app.main())
