@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from icecream import ic
+from icecream import install
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
@@ -23,10 +25,13 @@ async def obsalerts(request):
 
     return JSONResponse(
         {
-            "elements": get_obs_events(fromtime),
+            "elements": await get_obs_events(fromtime),
             "time": now.isoformat(),
         }
     )
+
+install()
+ic.configureOutput(includeContext=True)
 
 middleware = [
     Middleware(CORSMiddleware, allow_origins=['*']),

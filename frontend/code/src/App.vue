@@ -1,17 +1,25 @@
 <script setup>
   import { onMounted, onUnmounted, ref } from 'vue'
-  import axios from 'axios'
+  import axios from 'redaxios'
+
+  const sounds = {
+    "Alpissd1": "Alpissd1.mp3",
+    "Alpissd1": "Alpissd1.mp3",
+    "Fist": "Fist.mp3",
+    "Hdead": "Hdead.mp3",
+    "Ocapture": "Ocapture.mp3",
+    "Pig": "Pig.mp3",
+    "Sword1": "Sword1.mp3",
+    "Sword2": "Sword2.mp3",
+    "Sword3": "Sword3.mp3",
+    "Wzpissd1": "Wzpissd1.mp3",
+  }
 
   let lastTime = null;
   let cycleReference = null;
-  const propme = ref(null);
 
   const handleEvent = async (element) => {
-    console.log(element)
-    propme.value = true;
-    setTimeout(() => {
-      propme.value = null;
-    }, 2000)
+    console.log(element);
   }
 
   const fetchData = async () => {
@@ -41,10 +49,7 @@
 <template>
   <header>
     <div class="wrapper">
-      ELO
-      <div v-if="propme">
-        EVENT! {{propme}}
-      </div>
+      <audio v-for="(filename, key) in sounds" :src="'/sounds/' + filename" :id="key" />
     </div>
   </header>
 </template>

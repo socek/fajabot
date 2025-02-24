@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
-    "axios": "^1.7.9",
+    "redaxios": "^0.5.1",
     "vue": "^3.5.13"
   },
   "devDependencies": {

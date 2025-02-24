@@ -5,10 +5,10 @@ from uuid import uuid4
 
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.sql.expression import and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
-from fajabot import settings
-from fajabot.db.main import db
+from fajabot.db.main import transaction
 from fajabot.db.profile import CooldownTable
 from fajabot.db.profile import KVStoreTable
 from fajabot.db.profile import ObsalertsTable
@@ -19,13 +19,14 @@ from fajabot.profile import ProfileIdentity
 AUTH_TOKEN_KEY = "auth_token"
 
 
-def create_profile(
+@transaction
+async def create_profile(
     user_id: ProfileIdentity,
     hp: int = 4,
     defence: int = 0,
     attack: int = 1,
+    session: AsyncSession = None,
 ):
-    session = db()
     now = datetime.now()
     row = {
         "id": uuid4(),
@@ -39,20 +40,20 @@ def create_profile(
         "created_at": now,
         "updated_at": now,
     }
-    rowcount = session.execute(insert(ProfileTable).values([row])).rowcount
-    session.commit()
-    return rowcount
+    stmt = insert(ProfileTable).values([row])
+    return (await session.execute(stmt)).rowcount
 
 
-def update_profile(
+@transaction
+async def update_profile(
     user_id: ProfileIdentity,
     hp: Optional[int] = None,
     defence: Optional[int] = None,
     attack: Optional[int] = None,
     experience: Optional[int] = None,
     active: Optional[bool] = None,
+    session: AsyncSession = None,
 ):
-    session = db()
     now = datetime.now()
     row = {
         "updated_at": now,
@@ -68,14 +69,16 @@ def update_profile(
     if active is not None:
         row["active"] = active
 
-    result = session.query(ProfileTable.id).filter(
+    stmt = select(ProfileTable.id).filter(
         ProfileTable.user == user_id.user,
         ProfileTable.channel == user_id.channel,
         ProfileTable.active == True,
-    ).first()
+    )
+    result = (await session.execute(stmt)).first()
 
     if result:
-        session.execute(update(ProfileTable).where(ProfileTable.id == result[0]).values(row))
+        stmt = update(ProfileTable).where(ProfileTable.id == result[0]).values(row)
+        await session.execute(stmt)
     else:
         insert_row = dict(**row)
         insert_row["id"] = uuid4()
@@ -83,56 +86,18 @@ def update_profile(
         insert_row["channel"] = user_id.channel
         insert_row["created_at"] = now
         insert_row["active"] = True
-        session.execute(insert(ProfileTable).values([insert_row]))
-    session.commit()
-
-    # table = ProfileTable.__table__
-    # stmt = insert(table).values(
-    #     id=uuid4(), user=user_id.user, channel=user_id.channel, created_at=now, **row
-    # )
-    # stmt = stmt.on_conflict_do_update(
-    #     index_elements=[table.c.user, table.c.channel],
-    #     index_where=and_(
-    #         table.c.user == user_id.user,
-    #         table.c.channel == user_id.channel,
-    #     ),
-    #     set_=row,
-    # )
-    # session.execute(stmt)
-    # session.commit()
-
-    # TODO: upsert
-
-    # find_response = (
-    #     table.select("id")
-    #     .eq("user", user_id.user)
-    #     .eq("channel", user_id.channel)
-    #     .eq("active", True)
-    #     .execute()
-    # )
-
-    # if find_response.data == []:
-    #     default_profile = {
-    #         "hp": 4,
-    #         "defence": 0,
-    #         "attack": 1,
-    #         "experience": 0,
-    #         "active": True,
-    #     }
-    #     default_profile.update(row)
-    #     response = table.insert(default_profile).execute()
-    #     return
-    # else:
-    #     row_id = find_response.data[0]["id"]
-    #     (table.update(row).eq("id", row_id).execute())
-    #     return
+        stmt = insert(ProfileTable).values([insert_row])
+        await session.execute(stmt)
 
 
-def get_profile(user_id: ProfileIdentity, create_default: bool = True) -> Optional[Profile]:
-    session = db()
-
-    result = (
-        session.query(
+@transaction
+async def get_profile(
+    user_id: ProfileIdentity,
+    create_default: bool = True,
+    session: AsyncSession = None,
+) -> Optional[Profile]:
+    stmt = (
+        select(
             ProfileTable.hp, ProfileTable.defence, ProfileTable.attack, ProfileTable.experience
         )
         .filter(
@@ -140,8 +105,8 @@ def get_profile(user_id: ProfileIdentity, create_default: bool = True) -> Option
             ProfileTable.channel == user_id.channel,
             ProfileTable.active == True,
         )
-        .first()
     )
+    result = (await session.execute(stmt)).first()
 
     profile = Profile(
         ProfileIdentity(user_id.user, user_id.channel),
@@ -157,8 +122,13 @@ def get_profile(user_id: ProfileIdentity, create_default: bool = True) -> Option
         return profile
 
 
-def set_cooldown(user_id: ProfileIdentity, command: str, time: timedelta):
-    session = db()
+@transaction
+async def set_cooldown(
+    user_id: ProfileIdentity,
+    command: str,
+    time: timedelta,
+    session: AsyncSession = None,
+):
     row = {
         "id": uuid4(),
         "user": user_id.user,
@@ -166,86 +136,101 @@ def set_cooldown(user_id: ProfileIdentity, command: str, time: timedelta):
         "command": command,
         "cooldown": (datetime.now() + time).isoformat(),
     }
-    rowcount = session.execute(insert(CooldownTable).values([row])).rowcount
-    session.commit()
-    return rowcount
+    stmt = insert(CooldownTable).values([row])
+    return (await session.execute(stmt)).rowcount
 
 
-def get_cooldown_time(user_id: ProfileIdentity, command: str) -> Optional[list]:
-    session = db()
-
-    result = (
-        session.query(CooldownTable.cooldown)
+@transaction
+async def get_cooldown_time(
+    user_id: ProfileIdentity,
+    command: str,
+    session: AsyncSession = None,
+) -> Optional[list]:
+    stmt = (
+        select(CooldownTable.cooldown)
         .filter(
             CooldownTable.user == user_id.user,
             CooldownTable.channel == user_id.channel,
             CooldownTable.command == command,
             CooldownTable.cooldown > datetime.now(),
         )
-        .first()
+
     )
+    result = (await session.execute(stmt)).first()
 
     if result:
         div = result[0] - datetime.now()
         return [div.days, div.seconds // 3600, div.seconds // 60 % 60, div.seconds % 3600 % 60]
 
 
-def add_obs_event(payload: dict):
-    session = db()
+@transaction
+async def add_obs_event(
+    payload: dict,
+    session: AsyncSession = None,
+):
     row = {"id": uuid4(), "created_at": datetime.now(), "payload": payload}
-    rowcount = session.execute(insert(ObsalertsTable).values([row])).rowcount
-    session.commit()
-    return rowcount
+    stmt = insert(ObsalertsTable).values([row])
+    return (await session.execute(stmt)).rowcount
 
 
-def get_obs_events(fromtime: datetime) -> list:
-    session = db()
-    result = session.query(
+def prepare_element(row):
+    data = row._asdict()
+    data["created_at"] = data["created_at"].isoformat()
+    return data
+
+
+@transaction
+async def get_obs_events(
+    fromtime: datetime,
+    session: AsyncSession = None,
+) -> list:
+    stmt = select(
         ObsalertsTable.created_at,
         ObsalertsTable.payload,
     ).filter(
         ObsalertsTable.created_at > fromtime,
     )
-    return [row._asdict() for row in result]
+    result = await session.execute(stmt)
+    return [prepare_element(row) for row in result]
 
 
-def set_auth_tokens(token: str, refresh_token: str):
-    session = db()
-
-    table = KVStoreTable.__table__
+@transaction
+async def set_auth_tokens(
+    token: str,
+    refresh_token: str,
+    session: AsyncSession = None,
+):
     payload = {
         "token": token,
         "refresh_token": refresh_token,
     }
-    stmt = insert(table).values(
+    stmt = insert(KVStoreTable).values(
         key=AUTH_TOKEN_KEY,
         payload=payload,
         updated_at=datetime.now(),
     )
     stmt = stmt.on_conflict_do_update(
-        index_elements=[table.c.key],
-        index_where=table.c.key == AUTH_TOKEN_KEY,
+        index_elements=[KVStoreTable.key],
+        index_where=KVStoreTable.key == AUTH_TOKEN_KEY,
         set_=dict(
             payload=payload,
             updated_at=datetime.now(),
         ),
     )
-    session.execute(stmt)
-    session.commit()
+    await session.execute(stmt)
 
 
-def get_auth_tokens():
-    session = db()
-
-    result = (
-        session.query(
+@transaction
+async def get_auth_tokens(session: AsyncSession = None):
+    stmt = (
+        select(
             KVStoreTable.payload,
         )
         .filter(
             KVStoreTable.key == AUTH_TOKEN_KEY,
         )
-        .first()
     )
+    result = (await session.execute(stmt)).first()
 
     if result:
         row = result[0]

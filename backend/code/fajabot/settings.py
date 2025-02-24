@@ -12,7 +12,7 @@ def psql():
     user = config("POSTGRES_USER")
     password = config("POSTGRES_PASSWORD")
     host = config("POSTGRES_HOST")
-    return f"postgresql://{user}:{password}@{host}:5432/{name}"
+    return f"postgresql+asyncpg://{user}:{password}@{host}:5432/{name}"
 
 
 DB_URL: str = psql()
