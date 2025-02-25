@@ -60,7 +60,7 @@ def draw_quest() -> Quest:
     return choice(quest_deck)
 
 
-def apply_quest(profile: Profile, quest: Quest):
+async def apply_quest(profile: Profile, quest: Quest):
     row_changes = {}
     if quest.profile_hp_change:
         row_changes["hp"] = profile.hp + quest.profile_hp_change
@@ -69,9 +69,9 @@ def apply_quest(profile: Profile, quest: Quest):
     if quest.profile_attack_change:
         row_changes["attack"] = profile.attack + quest.profile_attack_change
 
-    update_profile(profile.user_id, **row_changes)
+    await update_profile(profile.user_id, **row_changes)
 
     if quest.quest_cooldown:
-        set_cooldown(profile.user_id, "quest", quest.quest_cooldown)
+        await set_cooldown(profile.user_id, "quest", quest.quest_cooldown)
     if quest.fight_cooldown:
-        set_cooldown(profile.user_id, "quest", quest.fight_cooldown)
+        await set_cooldown(profile.user_id, "quest", quest.fight_cooldown)

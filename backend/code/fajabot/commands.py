@@ -42,12 +42,12 @@ async def profilecmd(cmd: ChatCommand):
     while ' ' in texts:
         texts.remove(' ')
     if len(texts) == 1:
-        profile = get_profile(ProfileIdentity(cmd.user.name, cmd.room.name))
+        profile = await get_profile(ProfileIdentity(cmd.user.name, cmd.room.name))
     else:
         name = texts[1]
         if name.startswith("@"):
             name = name[1:]
-        profile = get_profile(ProfileIdentity(name, cmd.room.name))
+        profile = await get_profile(ProfileIdentity(name, cmd.room.name))
         if not profile:
             await cmd.reply(TEXTS["profile_not_found"])
             return
@@ -64,9 +64,9 @@ async def profilecmd(cmd: ChatCommand):
 @cooldown("quest", timedelta(hours=1))
 async def quest(cmd: ChatCommand):
     profile_id = ProfileIdentity(cmd.user.name, cmd.room.name)
-    profile = get_profile(profile_id)
+    profile = await get_profile(profile_id)
     quest = draw_quest()
-    apply_quest(profile, quest)
+    await apply_quest(profile, quest)
     await cmd.reply(quest.text)
 
 

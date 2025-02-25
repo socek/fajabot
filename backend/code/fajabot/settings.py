@@ -16,4 +16,4 @@ def psql():
 
 
 DB_URL: str = psql()
-DB_OPTIONS: dict = {"pool_recycle": 3600}
+DB_OPTIONS: dict = {"pool_recycle": 3600, "pool_pre_ping": True}

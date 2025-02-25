@@ -13,8 +13,8 @@ async def send_chatgra():
 
 async def send_profile(profile: Profile):
     profile = asdict(profile)
-    profile["user"] = profile["user_id"].user
-    profile["channel"] = profile["user_id"].channel
+    profile["user"] = profile["user_id"]["user"]
+    profile["channel"] = profile["user_id"]["channel"]
     del profile["user_id"]
     await add_obs_event({"event": "postac", "profile": profile})
 

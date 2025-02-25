@@ -1,7 +1,9 @@
+import asyncio
 from datetime import datetime
 from datetime import timedelta
 from functools import wraps
 
+from icecream import ic
 from twitchAPI.chat import ChatCommand
 
 from fajabot.driver import get_cooldown_time
@@ -15,7 +17,7 @@ def cooldown(command: str, cooldown_time: timedelta):
         @wraps(fun)
         async def wrapper(cmd: ChatCommand, *args, **kwargs):
             user_id = ProfileIdentity(cmd.user.name, cmd.room.name)
-            cooldown = await get_cooldown_time(user_id, command)
+            # cooldown = await get_cooldown_time(user_id, command)
             # TODO: change
             cooldown = False
             if cooldown:
@@ -38,3 +40,7 @@ def cooldown(command: str, cooldown_time: timedelta):
         return wrapper
 
     return cooldown_configuration
+
+
+async def elo():
+    ic(dir(asyncio.get_event_loop()))
