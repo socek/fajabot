@@ -27,8 +27,23 @@
     },
     quest: async (element) => {
     },
-    walcz: async (element) => {
-      console.log(element)
+    fight: async (element) => {
+      const isActive = element.payload.active
+      const fightResult = element.payload.fight_log.stages[1].result
+
+      const sounds = {
+        "profile_is_hit": "Sword2",
+        "profile_is_not_hit": "Fist",
+        "enemy_is_hit": "Sword3",
+        "enemy_is_not_hit": "Fist",
+        "draw": "Sword1",
+      }
+
+      if(isActive == false) {
+        document.querySelector('#Sword1').play()
+      } else {
+        document.querySelector('#' + sounds[fightResult]).play()
+      }
     },
     strimmore: async (element) => {
       await document.querySelector('#Wzpissd1').play()

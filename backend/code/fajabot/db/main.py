@@ -1,4 +1,3 @@
-from contextvars import ContextVar
 from functools import wraps
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,13 +6,13 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from fajabot.settings import DB_OPTIONS
 from fajabot.settings import DB_URL
 
-_engine_cache = ContextVar("engine")
+_engine_cache = {}
 
 
 async def _engine():
-    if not _engine_cache.get(None):
-        _engine_cache.set(create_async_engine(DB_URL, **DB_OPTIONS))
-    return _engine_cache.get(None)
+    if _engine_cache.get("engine", None) is None:
+        _engine_cache["engine"] = create_async_engine(DB_URL, **DB_OPTIONS)
+    return _engine_cache.get("engine", None)
 
 
 async def db():
@@ -27,6 +26,7 @@ def transaction(fun):
         async with session.begin():
             res = await fun(*args, session=session, **kwargs)
             await session.commit()
+            await session.close()
         return res
 
     return wrapper

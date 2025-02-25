@@ -60,7 +60,6 @@ async def profilecmd(cmd: ChatCommand):
     )
     await cmd.reply(text)
     await events.send_profile(profile)
-    # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Pig.wav")
 
 @cooldown("quest", timedelta(hours=1))
 async def quest(cmd: ChatCommand):
@@ -87,18 +86,13 @@ async def walcz(cmd: ChatCommand):
     defence_result = fight_log.stages[1]
     if defence_result.result == FightResult.profile_is_hit:
         texts.append(TEXTS["profile_is_hit"])
-        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword2.wav")
     elif defence_result.result == FightResult.profile_is_not_hit:
         texts.append(TEXTS["profile_is_not_hit"])
-        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Fist.wav")
     elif defence_result.result == FightResult.enemy_is_hit:
         texts.append(TEXTS["enemy_is_hit"].format(exp=defence_result.profile_exp_change))
-        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword3.wav")
     elif defence_result.result == FightResult.enemy_is_not_hit:
         texts.append(TEXTS["enemy_is_not_hit"])
-        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Fist.wav")
     else:
-        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword1.wav")
         texts.append(TEXTS["draw"])
 
     active = await update_profile_after_fight(

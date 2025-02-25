@@ -16,6 +16,8 @@ def cooldown(command: str, cooldown_time: timedelta):
         async def wrapper(cmd: ChatCommand, *args, **kwargs):
             user_id = ProfileIdentity(cmd.user.name, cmd.room.name)
             cooldown = await get_cooldown_time(user_id, command)
+            # TODO: change
+            cooldown = False
             if cooldown:
                 texts = []
                 if cooldown[0]:
