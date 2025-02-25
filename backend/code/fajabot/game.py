@@ -82,8 +82,8 @@ def _create_enemy(defence: int, attack: int) -> Enemy:
     return Enemy(defence, attack)
 
 
-def fight(user_id: ProfileIdentity):
-    profile = get_profile(user_id)
+async def fight(user_id: ProfileIdentity):
+    profile = await get_profile(user_id)
     enemy = _create_enemy(profile.defence, profile.attack)
     fight_log = FightLog(profile, enemy)
 

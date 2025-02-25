@@ -4,6 +4,7 @@ from playsound import playsound
 from twitchAPI.chat import Chat
 from twitchAPI.chat import ChatCommand
 
+from fajabot import events
 from fajabot.cooldown import cooldown
 from fajabot.driver import get_profile
 from fajabot.driver import update_profile
@@ -32,10 +33,11 @@ TEXTS = {
 
 async def chatgra(cmd: ChatCommand):
     await cmd.send(TEXTS["intro"])
-    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Ocapture.wav")
+    await events.send_chatgra()
+    # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Ocapture.wav")
 
 
-async def postac(cmd: ChatCommand):
+async def profilecmd(cmd: ChatCommand):
     texts = cmd.text.split(" ")
     while ' ' in texts:
         texts.remove(' ')
@@ -57,7 +59,8 @@ async def postac(cmd: ChatCommand):
         experience=profile.experience,
     )
     await cmd.reply(text)
-    playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Pig.wav")
+    await events.send_profile(profile)
+    # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Pig.wav")
 
 @cooldown("quest", timedelta(hours=1))
 async def quest(cmd: ChatCommand):
@@ -71,7 +74,7 @@ async def quest(cmd: ChatCommand):
 @cooldown("walcz", timedelta(hours=1))
 async def walcz(cmd: ChatCommand):
     profile_id = ProfileIdentity(cmd.user.name, cmd.room.name)
-    fight_log = fight(profile_id)
+    fight_log = await fight(profile_id)
 
     data = dict(
         name=cmd.user.name,
@@ -84,38 +87,39 @@ async def walcz(cmd: ChatCommand):
     defence_result = fight_log.stages[1]
     if defence_result.result == FightResult.profile_is_hit:
         texts.append(TEXTS["profile_is_hit"])
-        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword2.wav")
+        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword2.wav")
     elif defence_result.result == FightResult.profile_is_not_hit:
         texts.append(TEXTS["profile_is_not_hit"])
-        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Fist.wav")
+        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Fist.wav")
     elif defence_result.result == FightResult.enemy_is_hit:
         texts.append(TEXTS["enemy_is_hit"].format(exp=defence_result.profile_exp_change))
-        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword3.wav")
+        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword3.wav")
     elif defence_result.result == FightResult.enemy_is_not_hit:
         texts.append(TEXTS["enemy_is_not_hit"])
-        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Fist.wav")
+        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Fist.wav")
     else:
-        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword1.wav")
+        # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Sword1.wav")
         texts.append(TEXTS["draw"])
 
-    active = update_profile_after_fight(
+    active = await update_profile_after_fight(
         profile_id,
         defence_result,
     )
     if not active:
         texts.append(TEXTS["death"])
-        playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Human/Hdead.wav")
+
+    await events.send_fight(data, fight_log, active)
 
     await cmd.send(" ".join(texts))
 
 
-def update_profile_after_fight(profile_id: ProfileIdentity, defence_result: DefenceStage):
+async def update_profile_after_fight(profile_id: ProfileIdentity, defence_result: DefenceStage):
     if defence_result.profile_hp_change == 0 and defence_result.profile_exp_change == 0:
         return True
     if defence_result.result == FightResult.draw:
         return True
 
-    profile = get_profile(profile_id)
+    profile = await get_profile(profile_id)
     row_changes = {"active": True}
     if defence_result.profile_hp_change != 0:
         row_changes["hp"] = profile.hp + defence_result.profile_hp_change
@@ -123,7 +127,7 @@ def update_profile_after_fight(profile_id: ProfileIdentity, defence_result: Defe
             row_changes["active"] = False
     if defence_result.profile_exp_change != 0:
         row_changes["experience"] = profile.experience + defence_result.profile_exp_change
-    update_profile(profile_id, **row_changes)
+    await update_profile(profile_id, **row_changes)
     return row_changes["active"]
 
 
@@ -147,7 +151,7 @@ async def commands(cmd: ChatCommand):
 
 def register(chat: Chat):
     chat.register_command("czatgra", chatgra)
-    chat.register_command("postac", postac)
+    chat.register_command("postac", profilecmd)
     chat.register_command("quest", quest)
     chat.register_command("walcz", walcz)
     chat.register_command("topzywych", topzywych)

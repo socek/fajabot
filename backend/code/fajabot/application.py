@@ -31,12 +31,12 @@ async def on_ready(ready_event: EventData):
 async def authenticate(twitch):
     auth = UserAuthenticator(twitch, settings.USER_SCOPE, url='http://localhost/ttvbot/')
     try:
-        token, refresh_token = get_auth_tokens()
+        token, refresh_token = await get_auth_tokens()
         await twitch.set_user_authentication(token, settings.USER_SCOPE, refresh_token)
     except InvalidRefreshTokenException:
         print(f"Authorizing: {auth.return_auth_url()}")
         token, refresh_token = await auth.authenticate(use_browser=False)
-        set_auth_tokens(token, refresh_token)
+        await set_auth_tokens(token, refresh_token)
         await twitch.set_user_authentication(token, settings.USER_SCOPE, refresh_token)
 
 

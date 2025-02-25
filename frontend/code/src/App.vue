@@ -18,8 +18,30 @@
   let lastTime = null;
   let cycleReference = null;
 
+  const events = {
+    chatgra: async (element) => {
+      await document.querySelector('#Ocapture').play()
+    },
+    profile: async (element) => {
+      await document.querySelector('#Pig').play()
+    },
+    quest: async (element) => {
+    },
+    walcz: async (element) => {
+      console.log(element)
+    },
+    strimmore: async (element) => {
+      await document.querySelector('#Wzpissd1').play()
+    },
+  }
+
   const handleEvent = async (element) => {
-    console.log(element);
+    const handler = events[element.payload.event];
+    if(handler) {
+      await handler(element);
+    } else {
+      console.log("Event handler not found", element);
+    }
   }
 
   const fetchData = async () => {

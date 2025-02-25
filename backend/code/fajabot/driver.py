@@ -113,10 +113,10 @@ async def get_profile(
     )
     if result:
         row = result._asdict()
-        profile.hp = row["hp"]
-        profile.defence = row["defence"]
-        profile.attack = row["attack"]
-        profile.experience = row["experience"]
+        profile.hp = row.get("hp") or profile.hp
+        profile.defence = row.get("defence") or profile.defence
+        profile.attack = row.get("attack") or profile.attack
+        profile.experience = row.get("experience") or profile.experience
         return profile
     elif create_default:
         return profile
@@ -134,7 +134,7 @@ async def set_cooldown(
         "user": user_id.user,
         "channel": user_id.channel,
         "command": command,
-        "cooldown": (datetime.now() + time).isoformat(),
+        "cooldown": datetime.now() + time,
     }
     stmt = insert(CooldownTable).values([row])
     return (await session.execute(stmt)).rowcount
