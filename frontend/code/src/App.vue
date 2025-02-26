@@ -1,6 +1,8 @@
 <script setup>
   import { onMounted, onUnmounted, ref } from 'vue'
   import axios from 'redaxios'
+  import {useToast} from 'vue-toast-notification';
+  import 'vue-toast-notification/dist/theme-sugar.css';
 
   const sounds = {
     "Alpissd1": "Alpissd1.mp3",
@@ -17,6 +19,7 @@
 
   let lastTime = null;
   let cycleReference = null;
+  const $toast = useToast();
 
   const events = {
     chatgra: async (element) => {
@@ -31,18 +34,39 @@
       const isActive = element.payload.active
       const fightResult = element.payload.fight_log.stages[1].result
 
-      const sounds = {
-        "profile_is_hit": "Sword2",
-        "profile_is_not_hit": "Fist",
-        "enemy_is_hit": "Sword3",
-        "enemy_is_not_hit": "Fist",
-        "draw": "Sword1",
+      const events = {
+        "profile_is_hit": {
+          "sound": "Sword2",
+          "toast": "error",
+        },
+        "profile_is_not_hit": {
+          "sound": "Fist",
+          "toast": "warning",
+        },
+        "enemy_is_hit": {
+          "sound": "Sword3",
+          "toast": "success",
+        },
+        "enemy_is_not_hit": {
+          "sound": "Fist",
+          "toast": "warning",
+        },
+        "draw": {
+          "sound": "Sword1",
+          "toast": "info",
+        },
       }
 
       if(isActive == false) {
         document.querySelector('#Sword1').play()
+        $toast.error(element.payload.texts.join(" "))
       } else {
-        document.querySelector('#' + sounds[fightResult]).play()
+        $toast.open({
+          message: element.payload.texts.join(" "),
+          type: events[fightResult]["toast"],
+          duration: 5000
+        })
+        document.querySelector('#' + events[fightResult]["sound"]).play()
       }
     },
     strimmore: async (element) => {

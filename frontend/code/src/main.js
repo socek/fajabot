@@ -1,4 +1,8 @@
 import { createApp } from 'vue'
+import ToastPlugin from 'vue-toast-notification';
 import App from './App.vue'
 
-createApp(App).mount('#app')
+const app = createApp(App)
+app.use(ToastPlugin)
+app.mount('#app')
+

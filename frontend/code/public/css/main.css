@@ -3,7 +3,10 @@ body {
   width: 300px;
   line-height: 300px;
   text-align: center;
+  font-family: Arial, Verdana, sans-sarif;
+  background: #f8f8f8;
 }
+
 
 .cssid {
   line-height: 1.5;
@@ -11,4 +14,13 @@ body {
   vertical-align: middle;
 
   color: red;
+}
+
+.v-toast__icon {
+  display: none !important;
+}
+
+.v-toast__item {
+  min-height: 32px !important;
+  height: 32px !important;
 }

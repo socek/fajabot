@@ -34,7 +34,6 @@ TEXTS = {
 async def chatgra(cmd: ChatCommand):
     await cmd.send(TEXTS["intro"])
     await events.send_chatgra()
-    # playsound("/home/socek/Downloads/war2/WarCraft 2 Sounds/Misc/Ocapture.wav")
 
 
 async def profilecmd(cmd: ChatCommand):
@@ -102,7 +101,7 @@ async def walcz(cmd: ChatCommand):
     if not active:
         texts.append(TEXTS["death"])
 
-    await events.send_fight(data, fight_log, active)
+    await events.send_fight(data, fight_log, active, texts)
 
     await cmd.send(" ".join(texts))
 

@@ -19,7 +19,12 @@ async def send_profile(profile: Profile):
     await add_obs_event({"event": "postac", "profile": profile})
 
 
-async def send_fight(fight_data: dict, fight_log: FightLog, active: bool):
+async def send_fight(
+    fight_data: dict,
+    fight_log: FightLog,
+    active: bool,
+    texts: list,
+):
     fight_log = asdict(fight_log)
     for row in fight_log["stages"]:
         if "result" in row and is_dataclass(row["result"]):
@@ -32,5 +37,6 @@ async def send_fight(fight_data: dict, fight_log: FightLog, active: bool):
             "fight_data": fight_data,
             "fight_log": fight_log,
             "active": active,
+            "texts": texts,
         }
     )
